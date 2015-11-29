@@ -1,0 +1,4 @@
+sandstone.soic.indiana.edu yes
+blesmol.soic.indiana.edu yes
+chert.soic.indiana.edu yes
+degu.soic.indiana.edu no
