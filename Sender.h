@@ -12,13 +12,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <arpa/inet.h>
-
-
-// update message to send to neighbour (5 bytes)
-struct update_msg {
-    char node;
-    int cost;
-};
+#include "common.h"
 
 
 class Sender {

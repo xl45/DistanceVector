@@ -8,22 +8,10 @@
 #include <sys/select.h>
 #include "Sender.h"
 #include "Receiver.h"
-
-#define INFINITY 16
-#define NODE_NUM 4
-typedef std::string STR;
+#include "common.h"
 
 
-// each node has a route table, each line of route table is a route_entry
-struct route_entry {
-    STR dst;
-    STR nexthop;
-    int cost;
-    int ttl;
-};
-
-
-// graph for current node
+// graph for current node, same node sequence with config file
 int graph[NODE_NUM][NODE_NUM] = {
     {0       , 1       , 1       , INFINITY},
     {INFINITY, INFINITY, INFINITY, INFINITY},
@@ -32,14 +20,16 @@ int graph[NODE_NUM][NODE_NUM] = {
 };
 // route table for current node
 route_entry routing_table[NODE_NUM];
+//
+STR host_names[NODE_NUM];
+
+
 // global varibles
 STR config_filename;
 STR port;
 int ttl; // in second
 int period; // in second
 bool split_horizon;
-//
-STR host_names[NODE_NUM];
 
 
 // read config file and generate init graph and routing_table
@@ -114,23 +104,38 @@ void * send_service(void *arg) {
     }
 
     while(true) {
-        // advertise to neighbour
+        // decrement ttl
+        for(int i = 1; i < NODE_NUM; i++) {
+            if(routing_table[i].ttl >= 10)
+                routing_table[i].ttl -= period;
+            // if expire
+            if(routing_table[i].ttl == 0) {
+                routing_table[i].cost = INFINITY;
+                routing_table[i].nexthop = 'N';
+            }
+        }
+
+        // advertise to neighbour (add split_horizon!!!!!!!!!!!!!!!!!)
         for(int i = 0; i < NODE_NUM; i++) {
             if(routing_table[i].cost == 1) {
                 for(int j = 1; j < NODE_NUM; j++) {
-                    if(routing_table[j].cost < INFINITY) {
-                        update_msg msg2send;
-                        msg2send.node = routing_table[j].dst.at(0);
-                        msg2send.cost = routing_table[j].cost;
+                    update_msg msg2send;
+                    msg2send.node = routing_table[j].dst;
+                    msg2send.cost = routing_table[j].cost;
 
-                        mySenders[i].mySend(&msg2send);
-                    }
+                    mySenders[i].mySend(&msg2send);
                 }
             }
         }
 
         // sleep
-        usleep(period * 1000000);
+        usleep((period-5) * 1000000);
+
+        // print routing table
+        printRT(); 
+
+        // sleep
+        usleep(5 * 1000000);
     }
 }
 
@@ -166,20 +171,20 @@ void initialize() {
     // std::cout << "\n";
 
     // init routing table
-    routing_table[0].dst = host_names[0];
-    routing_table[0].nexthop = host_names[0];
+    routing_table[0].dst = host_names[0].at(0);
+    routing_table[0].nexthop = host_names[0].at(0);
     routing_table[0].cost = 0;
     routing_table[0].ttl = ttl;
-    routing_table[1].dst = host_names[1];
-    routing_table[1].nexthop = host_names[1];
+    routing_table[1].dst = host_names[1].at(0);
+    routing_table[1].nexthop = host_names[1].at(0);
     routing_table[1].cost = 1;
     routing_table[1].ttl = ttl;
-    routing_table[2].dst = host_names[2];
-    routing_table[2].nexthop = host_names[2];
+    routing_table[2].dst = host_names[2].at(0);
+    routing_table[2].nexthop = host_names[2].at(0);
     routing_table[2].cost = 1;
     routing_table[2].ttl = ttl;
-    routing_table[3].dst = host_names[3];
-    routing_table[3].nexthop = "NULL";
+    routing_table[3].dst = host_names[3].at(0);
+    routing_table[3].nexthop = 'N';
     routing_table[3].cost = INFINITY;
     routing_table[3].ttl = ttl;
 }
@@ -193,7 +198,7 @@ void printRT() {
     std::cout << "Node, Next Hop, Cost, TTL\n";
 
     for(int i = 0; i < NODE_NUM; i++) {
-        std::cout << routing_table[i].dst.at(0) << ", " << routing_table[i].nexthop.at(0)
+        std::cout << routing_table[i].dst << ", " << routing_table[i].nexthop
         << ", " << routing_table[i].cost << ", " << routing_table[i].ttl << std::endl;
     }
 
@@ -202,7 +207,7 @@ void printRT() {
 
 
 void myAssert(int code, STR msg) {
-    std::cout << code << ", " << msg << std::endl;
+    std::cout << "\n\n" << code << ", " << msg << std::endl;
 }
 
 

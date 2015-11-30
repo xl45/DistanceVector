@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <arpa/inet.h>
-#include "Sender.h"
+#include "common.h"
 
 
 class Receiver {
