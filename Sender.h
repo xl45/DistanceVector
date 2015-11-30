@@ -14,9 +14,9 @@
 #include <arpa/inet.h>
 
 
-// update message to send to neighbour
+// update message to send to neighbour (5 bytes)
 struct update_msg {
-    std::string addr;
+    char node;
     int cost;
 };
 

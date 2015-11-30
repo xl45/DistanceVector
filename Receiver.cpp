@@ -25,10 +25,10 @@ Receiver::Receiver(std::string port) {
 
 void Receiver::myRecv() {
     while(true) {
-        char buffer[1024];
+        char buffer[5];
         addr_len = sizeof(sender_addr);
 
-        int n = recvfrom(receiverFD, buffer, 1024, 0, (struct sockaddr *)&sender_addr, &addr_len);
+        int n = recvfrom(receiverFD, buffer, 5, 0, (struct sockaddr *)&sender_addr, &addr_len);
 
         if(n < 0) {
             perror("receiver recvfrom(): ");
@@ -36,14 +36,15 @@ void Receiver::myRecv() {
         }
 
         struct update_msg msg;
-        memset(&msg , 0, sizeof(update_msg));
+        memcpy(&msg, buffer, 5);
 
-        int len = strlen(buffer);
-
-        memcpy(&msg, buffer, len);
-
-        std::cout << "\nrecv following msg(" << len << " bytes): \n" << msg.addr 
+        std::cout << "\nrecv following msg: \n" << msg.addr 
         << ", " << msg.cost << std::endl;
+
+        // update corresponding ttl
+        // see if there is update
+        // if there is, update table and send update msg
+        // deduct ttl in unreceived routing entry, if there is 0, timeout and set to infinity(send this ?) 
     }
 }
 

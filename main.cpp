@@ -114,14 +114,18 @@ void * send_service(void *arg) {
     }
 
     while(true) {
-        // send
-        for(int i = 1; i < NODE_NUM; i++) {
-            if(routing_table[i].cost < INFINITY) {
-                update_msg msg2send;
-                msg2send.addr = routing_table[i].dst;
-                msg2send.cost = routing_table[i].cost;
+        // advertise to neighbour
+        for(int i = 0; i < NODE_NUM; i++) {
+            if(routing_table[i].cost == 1) {
+                for(int j = 1; j < NODE_NUM; j++) {
+                    if(routing_table[j].cost < INFINITY) {
+                        update_msg msg2send;
+                        msg2send.node = routing_table[j].dst.at(0);
+                        msg2send.cost = routing_table[j].cost;
 
-                mySenders[i].mySend(&msg2send);
+                        mySenders[i].mySend(&msg2send);
+                    }
+                }
             }
         }
 

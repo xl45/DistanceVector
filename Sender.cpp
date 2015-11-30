@@ -25,14 +25,12 @@ void Sender::init(std::string host, std::string port) {
 
 
 void Sender::mySend(struct update_msg * msg) {
-    int len = (msg->addr).length() + 4;
-
     // std::cout << "send len: " << len << std::endl;
 
-    char temp[len];
-    memcpy(temp, msg, len);
+    char temp[5];
+    memcpy(temp, msg, 5);
 
-    if( sendto(senderFD, temp, len, 0, receiverinfo->ai_addr, receiverinfo->ai_addrlen) == -1){
+    if( sendto(senderFD, temp, 5, 0, receiverinfo->ai_addr, receiverinfo->ai_addrlen) == -1){
         perror("Sender sendto(): ");
         exit(1);
     }
