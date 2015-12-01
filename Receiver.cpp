@@ -50,9 +50,6 @@ void Receiver::myRecv() {
         char *ip = inet_ntoa(sin->sin_addr);
         std::string str_ip(ip);
 
-        std::cout << "\nrecv following msg: \n" << msg.node 
-        << ", " << msg.cost << " (ip: " << str_ip << ")";
-
         // update coressponding ttl
         char fromNode;
         if(str_ip == NODE_A_IP)
@@ -64,6 +61,9 @@ void Receiver::myRecv() {
         else if(str_ip == NODE_D_IP)
             fromNode = 'd';
         updateTTL(fromNode);
+
+        std::cout << "(recv) receive following reachablity info from node " << fromNode << ":\n" << msg.node 
+        << ", " << msg.cost << " (ip: " << str_ip << ")";
 
         // update graph
         int index_from;
@@ -103,7 +103,19 @@ void bellman_ford() {
                 routing_table[i].cost = new_val;
                 routing_table[i].nexthop = host_names[j].at(0);
 
-                // trigger update!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                // trigger update (split horizon!!)
+                update_msg msg2send;
+                msg2send.node = routing_table[i].dst;
+                msg2send.cost = routing_table[i].cost;
+
+                for(int k = 0; k < NODE_NUM; k++) {
+                    if(routing_table[k].cost == 1) {
+                        mySenders[k].mySend(&msg2send);
+
+                        std::cout << "(trigger update) send out reachablity info for node: " << routing_table[i].dst 
+                        << " to neighbour node: " << routing_table[k].dst << std::endl;
+                    }
+                }
             }
         }
     }

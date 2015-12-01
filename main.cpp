@@ -115,15 +115,28 @@ void * send_service(void *arg) {
             }
         }
 
-        // advertise to neighbour (add split_horizon!!!!!!!!!!!!!!!!!)
+        // advertise to neighbour 
         for(int i = 0; i < NODE_NUM; i++) {
             if(routing_table[i].cost == 1) {
                 for(int j = 1; j < NODE_NUM; j++) {
+                    // if split horizon is true
+                    if(split_horizon) {
+                        if(routing_table[j].nexthop == routing_table[i].dst) {
+                            // do not send j, continue
+                            std::cout << "(advertisement) split_horizon is true, do not send out reachablity info for node: " << routing_table[j].dst
+                            << " to neighbour node: " << routing_table[i].dst << std::endl;
+                            continue;
+                        }
+                    }
+
                     update_msg msg2send;
                     msg2send.node = routing_table[j].dst;
                     msg2send.cost = routing_table[j].cost;
 
                     mySenders[i].mySend(&msg2send);
+
+                    std::cout << "(advertisement) send out reachablity info for node: " << routing_table[j].dst 
+                    << " to neighbour node: " << routing_table[i].dst << std::endl;
                 }
             }
         }
